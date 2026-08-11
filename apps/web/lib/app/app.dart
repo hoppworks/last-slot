@@ -129,6 +129,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             slot: slot,
             attempt: attempt,
             nameController: _nameController,
+            onRefresh: () => ref.invalidate(slotProvider),
             onSubmit: () => ref
                 .read(bookingControllerProvider.notifier)
                 .submit(_nameController.text),
@@ -225,7 +226,7 @@ class ProofPage extends StatelessWidget {
         const SizedBox(
           width: 680,
           child: Text(
-            'The browser journey exercises the public UI. The proof path explains where the durable guarantee lives and what the report can verify.',
+            'The browser journey makes the public result visible. The HTTP and database proof establishes the simultaneous-request invariant and idempotent replay.',
           ),
         ),
         const SizedBox(height: 42),
@@ -240,12 +241,6 @@ class ProofPage extends StatelessWidget {
               icon: Icons.code_rounded,
               uri:
                   'https://github.com/hoppworks/last-slot/blob/main/apps/web/patrol_test/last_slot_test.dart',
-            ),
-            _EvidenceLink(
-              label: 'Open CI evidence',
-              icon: Icons.verified_outlined,
-              uri: 'https://github.com/hoppworks/last-slot/actions',
-              filled: true,
             ),
           ],
         ),
@@ -270,7 +265,7 @@ class ProofPage extends StatelessWidget {
               ),
               SizedBox(height: 12),
               Text(
-                'Patrol opens two browser pages, performs physical keyboard input, submits both booking attempts, and verifies the public ledger audit entry. Retries are disabled.',
+                'Patrol opens two browser pages, performs physical keyboard input, verifies a confirmation and a conflict, opens fresh pages for persisted readback, and verifies the public ledger. Retries are disabled.',
                 style: TextStyle(color: _muted),
               ),
             ],
@@ -286,29 +281,21 @@ class _EvidenceLink extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.uri,
-    this.filled = false,
   });
 
   final String label;
   final IconData icon;
   final String uri;
-  final bool filled;
 
   @override
   Widget build(BuildContext context) => Link(
     uri: Uri.parse(uri),
     target: LinkTarget.blank,
-    builder: (context, followLink) => filled
-        ? FilledButton.icon(
-            onPressed: followLink,
-            icon: Icon(icon),
-            label: Text(label),
-          )
-        : OutlinedButton.icon(
-            onPressed: followLink,
-            icon: Icon(icon),
-            label: Text(label),
-          ),
+    builder: (context, followLink) => OutlinedButton.icon(
+      onPressed: followLink,
+      icon: Icon(icon),
+      label: Text(label),
+    ),
   );
 }
 
@@ -449,12 +436,14 @@ class _BookingCard extends StatelessWidget {
     required this.slot,
     required this.attempt,
     required this.nameController,
+    required this.onRefresh,
     required this.onSubmit,
   });
 
   final AsyncValue<SlotSnapshot> slot;
   final BookingAttemptState attempt;
   final TextEditingController nameController;
+  final VoidCallback onRefresh;
   final VoidCallback onSubmit;
 
   @override
@@ -478,6 +467,7 @@ class _BookingCard extends StatelessWidget {
             slot: value,
             attempt: attempt,
             nameController: nameController,
+            onRefresh: onRefresh,
             onSubmit: onSubmit,
           ),
         ),
@@ -491,12 +481,14 @@ class _BookingForm extends StatelessWidget {
     required this.slot,
     required this.attempt,
     required this.nameController,
+    required this.onRefresh,
     required this.onSubmit,
   });
 
   final SlotSnapshot slot;
   final BookingAttemptState attempt;
   final TextEditingController nameController;
+  final VoidCallback onRefresh;
   final VoidCallback onSubmit;
 
   @override
@@ -530,9 +522,12 @@ class _BookingForm extends StatelessWidget {
         _SlotState(status: slot.status),
         const SizedBox(height: 24),
         if (confirmed != null)
-          _ResultBanner.confirmed(confirmed.result.booking.customerName)
+          _ResultBanner.confirmed(
+            confirmed.result.booking.customerName,
+            onRefresh: onRefresh,
+          )
         else if (attempt is BookingConflict || isBooked)
-          const _ResultBanner.conflict()
+          _ResultBanner.conflict(onRefresh: onRefresh)
         else if (attempt is BookingTemporarilyUnavailable)
           _ResultBanner.unavailable(onRetry: onSubmit)
         else ...[
@@ -579,17 +574,24 @@ class _ResultBanner extends StatelessWidget {
     required this.title,
     required this.detail,
     this.onRetry,
+    this.onRefresh,
+    this.refreshLabel,
     this.isAlert = false,
   });
 
-  factory _ResultBanner.confirmed(String name) => _ResultBanner._(
+  factory _ResultBanner.confirmed(
+    String name, {
+    required VoidCallback onRefresh,
+  }) => _ResultBanner._(
     color: _green,
     icon: Icons.check_circle_outline,
     title: 'Booking confirmed',
     detail: '$name holds this appointment. The result is persisted.',
+    onRefresh: onRefresh,
+    refreshLabel: 'Refresh confirmed booking',
   );
 
-  const _ResultBanner.conflict()
+  const _ResultBanner.conflict({required VoidCallback onRefresh})
     : this._(
         color: _red,
         icon: Icons.priority_high_rounded,
@@ -597,6 +599,8 @@ class _ResultBanner extends StatelessWidget {
         detail:
             'Another visitor completed the booking first. No second booking was created.',
         isAlert: true,
+        onRefresh: onRefresh,
+        refreshLabel: 'Refresh conflict state',
       );
 
   factory _ResultBanner.unavailable({
@@ -615,6 +619,8 @@ class _ResultBanner extends StatelessWidget {
   final String title;
   final String detail;
   final VoidCallback? onRetry;
+  final VoidCallback? onRefresh;
+  final String? refreshLabel;
   final bool isAlert;
 
   @override
@@ -648,6 +654,10 @@ class _ResultBanner extends StatelessWidget {
             const SizedBox(height: 10),
             TextButton(onPressed: onRetry, child: const Text('Retry booking')),
           ],
+          if (onRefresh != null) ...[
+            const SizedBox(height: 10),
+            TextButton(onPressed: onRefresh, child: Text(refreshLabel!)),
+          ],
         ],
       ),
     );
@@ -655,7 +665,7 @@ class _ResultBanner extends StatelessWidget {
       container: true,
       liveRegion: true,
       label: title,
-      child: ExcludeSemantics(child: content),
+      child: content,
     );
   }
 }

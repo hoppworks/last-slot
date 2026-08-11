@@ -8,11 +8,16 @@ uncertain response.
 
 ## The proof
 
-One Patrol Web test opens two browser pages, fills the same slot through the
-two different people, and submits both attempts together. Exactly one browser
-must receive confirmation and the other an explicit conflict. A third browser
-opens the admin surface and reads one persisted booking. Both visitor pages then
-reload and still show the slot as booked.
+The HTTP/DB integration proof releases two real HTTP clients through a process
+barrier for a dedicated synthetic fixture slot. It verifies one `201`, one
+`409`, and one database row. It also verifies that sending one idempotency key
+twice produces `201 → 200`, the same booking ID, and one database row.
+
+One Patrol Web test then opens two browser pages, fills the public slot for two
+different people, and visibly verifies one confirmation and one explicit
+conflict. A third browser opens the admin surface and reads one persisted
+booking. Two fresh visitor pages then load the public API state and visibly show
+that the slot is booked.
 
 The browser test may use only visible, accessible product behavior. It must not
 query PostgreSQL directly or call a test-only endpoint.
@@ -27,10 +32,10 @@ query PostgreSQL directly or call a test-only endpoint.
 | PostgreSQL | Enforces one booking per slot and one result per idempotency key. |
 | Patrol Web | Proves those guarantees survive the complete user journey. |
 
-Patrol is the evidence layer, not the source of correctness. The database
-constraints remain authoritative if two requests reach the service at the same
-time; the end-to-end journey catches broken wiring or dishonest UI states above
-that boundary.
+Patrol is the visible evidence layer, not the source of correctness. The
+barrier-synchronised HTTP/DB proof establishes the concurrency and idempotency
+invariants; the browser journey catches broken wiring or dishonest UI states
+above that boundary.
 
 ## Acceptance criteria
 

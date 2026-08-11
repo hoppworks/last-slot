@@ -66,6 +66,7 @@ jobs:
           name: patrol-browser-evidence
           path: |
             build/playwright/**
+            build/http-integration/**
             build/compose.log
           if-no-files-found: warn
 

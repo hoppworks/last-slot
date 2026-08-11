@@ -13,9 +13,9 @@ reliable. Patrol proves that those guarantees survive the complete user
 journey.
 
 > **Current milestone — executable proof:** the complete Flutter surface,
-> PostgreSQL invariant, versioned API, Rust services, Docker topology, and a
-> zero-retry two-browser Patrol journey are implemented. A fresh local run
-> produces the HTML report and trace that substantiate this claim.
+> PostgreSQL invariant, versioned API, Rust services, Docker topology, a
+> barrier-synchronised HTTP/DB integration proof, and a zero-retry two-browser
+> Patrol journey are implemented. A fresh local run produces their evidence.
 
 The approved visual direction is documented in [DESIGN.md](DESIGN.md), and the
 complete case-study narrative lives in [docs/CASE-STUDY.md](docs/CASE-STUDY.md).
@@ -26,10 +26,9 @@ The technical one-pager and implementation postmortem are collected in
 
 The app deliberately offers two routes: run the booking surface yourself, or
 inspect the durable evidence. The public proof page links to the
-[Patrol test source](https://github.com/hoppworks/last-slot/blob/main/apps/web/patrol_test/last_slot_test.dart)
-and the [GitHub Actions evidence](https://github.com/hoppworks/last-slot/actions).
-The latter provides the HTML report once a successful `main` run can publish
-GitHub Pages.
+[Patrol test source](https://github.com/hoppworks/last-slot/blob/main/apps/web/patrol_test/last_slot_test.dart).
+The repository also contains the reproducible HTTP/DB proof in
+[`scripts/http_integration.sh`](scripts/http_integration.sh).
 
 ## Target proof
 
@@ -41,8 +40,10 @@ bash scripts/e2e.sh
 ```
 
 The command builds the Flutter web app, starts the complete runtime with Docker
-Compose, runs the two-browser journey with zero retries, writes the Patrol
-HTML report and trace, and tears the runtime down again.
+Compose, releases two HTTP booking requests through a barrier, verifies the
+database counts and idempotent replay, runs the two-browser journey with zero
+retries, writes the Patrol HTML report and trace, and tears the runtime down
+again.
 
 To inspect the local report:
 
@@ -50,9 +51,9 @@ To inspect the local report:
 open build/playwright/html/index.html
 ```
 
-CI runs the same command. Failed runs retain screenshots, video, trace, JUnit
-output, and service logs as workflow artifacts; successful `main` runs publish
-the Patrol HTML report on GitHub Pages.
+CI runs the same command. Failed runs retain screenshots, video, trace, HTTP/DB
+evidence, and service logs as workflow artifacts; successful `main` runs
+publish the Patrol HTML report on GitHub Pages.
 
 ## Setup and limits
 
@@ -71,13 +72,15 @@ the negative case and presentation script.
 The test interacts only through visible Flutter semantics:
 
 1. Ada and Linus open the booking surface in separate browser contexts.
-2. Both submit the same available slot concurrently.
-3. One browser receives confirmation and one receives a conflict.
-4. A fresh admin browser reads exactly one confirmed booking.
-5. Both visitor pages refresh and still display the persisted booked state.
+2. The stack integration proof releases two HTTP requests for a separate
+   fixture slot concurrently and verifies `201 + 409` and one database row.
+3. The two browser pages visibly show one confirmation and one conflict.
+4. Two fresh visitor pages visibly load the persisted booked state.
+5. A fresh admin browser reads exactly one confirmed booking.
 
-The test never queries PostgreSQL directly. A green result therefore proves the
-same public path a user experiences instead of a test-only shortcut.
+Patrol never queries PostgreSQL directly; it proves the same public path a user
+experiences. The separate stack test queries the database only to prove the
+durable invariant and idempotency contract that a browser cannot observe.
 
 ## Architecture
 
@@ -105,8 +108,11 @@ microservice zoo around a one-rule example.
   machine-readable error envelope and `Retry-After` on temporary outages.
 - The API is versioned under `/v1`; the checked-in OpenAPI contract documents
   every request, response, and failure.
-- Patrol runs with zero retries and captures a trace. A flaky pass is
-  not hidden behind reruns.
+- The HTTP/DB proof uses a process barrier to release competing requests, then
+  verifies one durable row. A second real-stack request reuses one idempotency
+  key and verifies `201 → 200`, the same booking ID, and one durable row.
+- Patrol runs with zero retries and captures a trace on every run. A flaky pass
+  is not hidden behind reruns.
 - Container base images and GitHub Actions are pinned to immutable digests or
   commit SHAs.
 

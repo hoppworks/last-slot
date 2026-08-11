@@ -8,6 +8,14 @@ const _appUrl = String.fromEnvironment(
 
 final _nameField = WebSelector(role: 'textbox');
 final _bookButton = WebSelector(text: 'Book the last slot');
+final _confirmedOutcome = WebSelector(
+  role: 'button',
+  text: 'Refresh confirmed booking',
+);
+final _conflictOutcome = WebSelector(
+  role: 'button',
+  text: 'Refresh conflict state',
+);
 final _inspectLedger = WebSelector(text: 'Inspect 1 confirmed booking');
 
 Future<void> _enterName(PatrolIntegrationTester $, String name) async {
@@ -25,7 +33,7 @@ String _e2eUrl(String path) => '$_appUrl$path?e2e=1';
 
 void main() {
   patrolTest(
-    'two browser pages compete for one slot and the ledger exposes one winner',
+    'two visitors see one confirmation, one conflict, and fresh pages read the persisted state',
     ($) async {
       final firstVisitor = await $.platform.web.openNewPage(
         url: _e2eUrl('/book'),
@@ -40,12 +48,30 @@ void main() {
       await $.platform.web.switchToPage(pageId: secondVisitor);
       await _enterName($, 'Linus');
 
-      // Do not wait for either HTTP response before starting the other visible
-      // UI action. Both browser pages therefore compete for the same slot.
+      // The dedicated HTTP/DB integration proof releases two requests through
+      // a real barrier. This browser proof owns the other half of the claim:
+      // users can see both public outcomes and a fresh public read afterwards.
       await $.platform.web.switchToPage(pageId: firstVisitor);
       await $.platform.web.tap(_bookButton);
+      await $.platform.web.tap(_confirmedOutcome);
+
       await $.platform.web.switchToPage(pageId: secondVisitor);
       await $.platform.web.tap(_bookButton);
+      await $.platform.web.tap(_conflictOutcome);
+
+      // Fresh browser pages have no local attempt state. The conflict action
+      // appears there only after the public API returns a booked slot.
+      final freshFirstVisitor = await $.platform.web.openNewPage(
+        url: _e2eUrl('/book'),
+      );
+      await $.platform.web.switchToPage(pageId: freshFirstVisitor);
+      await $.platform.web.tap(_conflictOutcome);
+
+      final freshSecondVisitor = await $.platform.web.openNewPage(
+        url: _e2eUrl('/book'),
+      );
+      await $.platform.web.switchToPage(pageId: freshSecondVisitor);
+      await $.platform.web.tap(_conflictOutcome);
 
       final ledger = await $.platform.web.openNewPage(url: _e2eUrl('/admin'));
       await $.platform.web.switchToPage(pageId: ledger);
