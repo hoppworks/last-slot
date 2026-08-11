@@ -1,0 +1,89 @@
+# Product
+
+<!-- impeccable:product-schema 1 -->
+
+## Platform
+
+web
+
+## Stack
+
+Flutter Web with Riverpod and GoRouter; a Rust Axum gateway calling a tonic
+booking service; PostgreSQL through SQLx; Docker Compose for local orchestration;
+and Playwright with TypeScript in GitHub Actions.
+
+## Users
+
+The primary audience is an employer, engineering lead, or experienced developer
+reviewing a portfolio repository. They arrive with little context and need to
+judge whether the author can build software that remains correct under retries
+and concurrent use.
+
+## Product Purpose
+
+Last Slot is a small, executable reliability case study. It lets two visitors
+compete for the same final appointment and proves that exactly one booking is
+created. Success means a reviewer can understand the invariant quickly, run the
+system locally, inspect the Playwright evidence, and trace the behavior across
+the browser, API, service, and database.
+
+## Positioning
+
+The project does not claim reliability through a testing-tool badge. It exposes
+one meaningful invariant — one slot can have at most one booking — implements
+that invariant at the database boundary, and proves it through two real browser
+sessions and a visible admin readback.
+
+## Operating Context
+
+Reviewers first encounter the repository on GitHub. They should be able to start
+the complete system with Docker Compose, run one deterministic end-to-end
+journey, and inspect traces, screenshots, video on failure, and the HTML report.
+The live demo and the repository use synthetic people and appointment data.
+
+## Capabilities and Constraints
+
+- Two independent browser sessions can attempt the same booking concurrently.
+- Exactly one booking succeeds; the other receives an honest conflict state.
+- Refreshes and retried requests cannot create duplicate bookings.
+- An admin surface reads the persisted result through the same public API.
+- The public HTTP contract is versioned under `/v1` and uses idempotency keys.
+- The repository remains intentionally small: one gateway, one domain service,
+  one database, and one Flutter application.
+- Authentication, payments, Kubernetes, and unrelated business features are out
+  of scope.
+
+## Brand Commitments
+
+The product name is **Last Slot**. The primary line is **“One slot. Two
+browsers. One correct result.”** Product and repository copy are English-first
+so international reviewers can assess it. Claims must be backed by executable
+evidence; synthetic demonstration data is labeled as such.
+
+## Evidence on Hand
+
+The confirmed evidence target is the Playwright journey, its trace and report,
+the database constraints, and CI output. There are no customer testimonials,
+performance benchmarks, uptime claims, or commercial deployment claims, and
+future work must not invent them.
+
+## Approved Design Direction
+
+The approved direction is implemented as a clean engineering case study:
+white canvas, strong blue identity, direct proposition, booking and ledger
+surfaces, a compact architecture flow, and a factual proof strip. The paired
+browser experience is supplied by the executable Playwright journey rather
+than by decorative screenshots.
+
+## Product Principles
+
+1. Prove behavior instead of describing intent.
+2. Put correctness at the lowest durable boundary and verify it from the top.
+3. Prefer one complete vertical slice over broad scaffolding.
+4. Make failures observable, reproducible, and understandable to a cold reader.
+5. Keep the architecture proportional to the invariant being demonstrated.
+
+## Accessibility & Inclusion
+
+The booking and admin surfaces target WCAG 2.2 AA. All critical states have
+semantic labels, keyboard access, visible focus, and text in addition to color.

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package lastslot.booking.v1;
+
+service BookingService {
+  rpc GetSlot(GetSlotRequest) returns (Slot);
+  rpc CreateBooking(CreateBookingRequest) returns (CreateBookingResponse);
+}
+message GetSlotRequest {
+  string slot_id = 1;
+}
+
+message CreateBookingRequest {
+  string slot_id = 1;
+  string customer_name = 2;
+  string idempotency_key = 3;
+}
+
+message CreateBookingResponse {
+  Booking booking = 1;
+  Slot slot = 2;
+  bool replayed = 3;
+}
+
+message Slot {
+  string id = 1;
+  string title = 2;
+  string starts_at = 3;
+  string status = 4;
+  optional Booking booking = 5;
+}
+
+message Booking {
+  string id = 1;
+  string customer_name = 2;
+  string created_at = 3;
+}

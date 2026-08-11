@@ -1,0 +1,13 @@
+.dart_tool/
+.idea/
+*.iml
+.packages
+.flutter-plugins*
+build/
+target/
+node_modules/
+playwright-report/
+.env
+*.log
+.impeccable/
+.private-state/
