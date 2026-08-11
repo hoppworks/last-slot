@@ -8,7 +8,7 @@ uncertain response.
 
 ## The proof
 
-One Playwright test opens two isolated browser contexts, fills the same slot for
+One Patrol Web test opens two browser pages, fills the same slot through the
 two different people, and submits both attempts together. Exactly one browser
 must receive confirmation and the other an explicit conflict. A third browser
 opens the admin surface and reads one persisted booking. Both visitor pages then
@@ -25,9 +25,9 @@ query PostgreSQL directly or call a test-only endpoint.
 | Axum gateway | Owns the versioned HTTP contract and stable error envelope. |
 | tonic service | Validates booking intent and idempotent replay semantics. |
 | PostgreSQL | Enforces one booking per slot and one result per idempotency key. |
-| Playwright | Proves those guarantees survive the complete user journey. |
+| Patrol Web | Proves those guarantees survive the complete user journey. |
 
-Playwright is the evidence layer, not the source of correctness. The database
+Patrol is the evidence layer, not the source of correctness. The database
 constraints remain authoritative if two requests reach the service at the same
 time; the end-to-end journey catches broken wiring or dishonest UI states above
 that boundary.

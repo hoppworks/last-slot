@@ -47,4 +47,22 @@ wait_for_url \
   "Public API"
 wait_for_url "http://127.0.0.1:8081/healthz" "Flutter web"
 
-APP_URL=http://127.0.0.1:8081 pnpm e2e
+(
+  cd apps/web
+  dart run patrol_cli:main test \
+    --device chrome \
+    --target patrol_test/last_slot_test.dart \
+    --dart-define=E2E_APP_URL=http://127.0.0.1:8081 \
+    --test-server-port 8083 \
+    --app-server-port 8084 \
+    --web-port 8082 \
+    --web-headless \
+    --web-retries 0 \
+    --web-timeout 60000 \
+    --web-global-timeout 180000 \
+    --web-report-dir ../../build/patrol/html \
+    --web-results-dir ../../build/patrol/results \
+    --web-trace retain-on-failure \
+    --web-screenshot only-on-failure \
+    --no-check-compatibility
+)

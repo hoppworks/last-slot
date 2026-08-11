@@ -8,14 +8,14 @@ appointment. PostgreSQL permits exactly one winner, the losing browser receives
 an honest conflict, and an admin view reads the persisted outcome through the
 same public API.
 
-The point is not that Playwright makes software reliable. The database
+The point is not that Patrol makes software reliable. The database
 invariant, idempotent API, and explicit error semantics make the behavior
-reliable. Playwright proves that those guarantees survive the complete user
+reliable. Patrol proves that those guarantees survive the complete user
 journey.
 
 > **Current milestone — executable proof:** the complete Flutter surface,
 > PostgreSQL invariant, versioned API, Rust services, Docker topology, and a
-> zero-retry two-browser Playwright journey are implemented. A fresh local run
+> zero-retry two-browser Patrol journey are implemented. A fresh local run
 > produces the HTML report and trace that substantiate this claim.
 
 The approved visual direction is documented in [DESIGN.md](DESIGN.md), and the
@@ -25,33 +25,31 @@ The technical one-pager and implementation postmortem are collected in
 
 ## Target proof
 
-Prerequisites are Docker, Flutter 3.44.2, Node.js 22, pnpm 11, and a local
-Chromium installation managed by Playwright.
+Prerequisites are Docker, Flutter 3.44.2, and Node.js 22. Patrol manages
+Chromium through its web runner.
 
 ```bash
-pnpm install
-pnpm exec playwright install chromium
-pnpm e2e:stack
+bash scripts/e2e.sh
 ```
 
 The command builds the Flutter web app, starts the complete runtime with Docker
-Compose, runs the two-browser journey with zero retries, writes the Playwright
+Compose, runs the two-browser journey with zero retries, writes the Patrol
 HTML report and trace, and tears the runtime down again.
 
 To inspect the local report:
 
 ```bash
-pnpm e2e:report
+open build/patrol/html/index.html
 ```
 
 CI runs the same command. Failed runs retain screenshots, video, trace, JUnit
 output, and service logs as workflow artifacts; successful `main` runs publish
-the Playwright HTML report on GitHub Pages.
+the Patrol HTML report on GitHub Pages.
 
 ## Setup and limits
 
 The verified local target is macOS or Linux with Docker Compose, Flutter
-3.44.2, Node.js 22, pnpm 11, and Chromium installed by Playwright. The demo
+3.44.2 and Node.js 22. Patrol installs its browser runtime. The demo
 uses synthetic data and local containers; it is deployable as the supplied
 Docker Compose stack, but is intentionally not an authenticated, public
 multi-tenant booking product. The published web app and API share one origin:
@@ -77,7 +75,7 @@ same public path a user experiences instead of a test-only shortcut.
 
 ```mermaid
 flowchart LR
-    PW["Playwright<br/>two browser contexts"] --> WEB["Flutter Web<br/>Riverpod + GoRouter"]
+    PW["Patrol Web<br/>two browser pages"] --> WEB["Flutter Web<br/>Riverpod + GoRouter"]
     WEB -->|"HTTP /v1<br/>Idempotency-Key"| GW["Rust gateway<br/>Axum"]
     GW -->|"gRPC"| SVC["Booking service<br/>tonic"]
     SVC -->|"SQLx"| DB[("PostgreSQL")]
@@ -99,7 +97,7 @@ microservice zoo around a one-rule example.
   machine-readable error envelope and `Retry-After` on temporary outages.
 - The API is versioned under `/v1`; the checked-in OpenAPI contract documents
   every request, response, and failure.
-- Playwright runs with zero retries and always captures a trace. A flaky pass is
+- Patrol runs with zero retries and captures a trace. A flaky pass is
   not hidden behind reruns.
 - Container base images and GitHub Actions are pinned to immutable digests or
   commit SHAs.

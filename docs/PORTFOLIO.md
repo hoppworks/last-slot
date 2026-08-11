@@ -34,13 +34,13 @@ cannot weaken either guarantee.
 
 ## The proof
 
-The Playwright test opens two isolated browser contexts, uses actual keyboard
+The Patrol Web test opens two browser pages, uses actual keyboard
 input, submits both booking forms concurrently, then opens a fresh `/admin`
 browser. It asserts one success, one conflict, exactly one readback, and the
 same booked state after both visitors refresh. It has `retries: 0`, calls no
 database or test-only endpoint, and retains a trace for every run.
 
-Run it locally with `pnpm e2e:stack`. CI runs the same command and publishes
+Run it locally with `bash scripts/e2e.sh`. CI runs the same command and publishes
 the report from successful `main` builds.
 
 ## Deliberate trade-off
@@ -64,7 +64,7 @@ feature for users to trigger.
 **Demo:** Open two fresh browser windows on `/book`, enter Ada and Linus, then
 submit together. Point out the one confirmation and one honest conflict. Open
 `/admin`, show exactly one booked name, then refresh both visitor pages. End by
-opening the Playwright report: this is the same path, recorded without retries.
+opening the Patrol report: this is the same path, recorded without retries.
 
 **Situation:** a last appointment is shown to two people at once. **Task:**
 guarantee that the application never represents two bookings as valid.
