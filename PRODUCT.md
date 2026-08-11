@@ -14,18 +14,16 @@ and Patrol Web in GitHub Actions.
 
 ## Users
 
-The primary audience is an employer, engineering lead, or experienced developer
-reviewing a portfolio repository. They arrive with little context and need to
-judge whether the author can build software that remains correct under retries
-and concurrent use.
+The project should be understandable without prior context and demonstrate
+software that remains correct under retries and concurrent use.
 
 ## Product Purpose
 
 Last Slot is a small, executable reliability case study. It lets two visitors
 compete for the same final appointment and proves that exactly one booking is
-created. Success means a reviewer can understand the invariant quickly, run the
-system locally, inspect the Patrol evidence, and trace the behavior across
-the browser, API, service, and database.
+created. Success means the invariant is easy to understand, the system can run
+locally, and the Patrol evidence traces behavior across the browser, API,
+service, and database.
 
 ## Positioning
 
@@ -36,10 +34,10 @@ sessions and a visible admin readback.
 
 ## Operating Context
 
-Reviewers first encounter the repository on GitHub. They should be able to start
-the complete system with Docker Compose, run one deterministic end-to-end
-journey, and inspect traces, screenshots, video on failure, and the HTML report.
-The live demo and the repository use synthetic people and appointment data.
+The repository should start with Docker Compose, run one deterministic
+end-to-end journey, and retain traces, screenshots, video on failure, and an
+HTML report. The live demo and repository use synthetic people and appointment
+data.
 
 ## Capabilities and Constraints
 
@@ -57,8 +55,8 @@ The live demo and the repository use synthetic people and appointment data.
 
 The product name is **Last Slot**. The primary line is **“One slot. Two
 browsers. One correct result.”** Product and repository copy are English-first
-so international reviewers can assess it. Claims must be backed by executable
-evidence; synthetic demonstration data is labeled as such.
+for a broad technical audience. Claims must be backed by executable evidence;
+synthetic demonstration data is labeled as such.
 
 ## Evidence on Hand
 

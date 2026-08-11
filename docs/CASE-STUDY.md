@@ -45,4 +45,4 @@ that boundary.
 
 The case study uses synthetic data and one slot. Authentication, payments,
 calendar integrations, Kubernetes, performance claims, and unrelated CRUD are
-excluded. The narrow scope is what makes every layer inspectable by a reviewer.
+excluded. The narrow scope is what makes every layer inspectable.

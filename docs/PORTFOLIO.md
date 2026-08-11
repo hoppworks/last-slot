@@ -20,7 +20,7 @@ cannot weaken either guarantee.
 | Unique database constraint | App-level “check then insert” | The database, not timing in one process, resolves the race. |
 | Client idempotency key | Retrying every POST as a new intent | A timeout can safely replay one intent without a second booking. |
 | Explicit `409 slot_taken` | Generic error or false success | The losing visitor receives an honest, actionable outcome. |
-| Public `/admin` readback | Database assertion in the test | The proof covers the same read path a reviewer can open. |
+| Public `/admin` readback | Database assertion in the test | The proof covers the same read path available in the app. |
 
 ## Visible failure modes
 

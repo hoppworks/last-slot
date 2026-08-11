@@ -2,11 +2,10 @@
 
 **One slot. Two browsers. One correct result.**
 
-Last Slot is an executable reliability case study built for engineering
-reviewers. Two independent browser sessions try to book the same final
-appointment. PostgreSQL permits exactly one winner, the losing browser receives
-an honest conflict, and an admin view reads the persisted outcome through the
-same public API.
+Last Slot is an executable reliability case study. Two independent browser
+sessions try to book the same final appointment. PostgreSQL permits exactly one
+winner, the losing browser receives an honest conflict, and an admin view reads
+the persisted outcome through the same public API.
 
 The point is not that Patrol makes software reliable. The database
 invariant, idempotent API, and explicit error semantics make the behavior
@@ -19,11 +18,11 @@ journey.
 > produces the HTML report and trace that substantiate this claim.
 
 The approved visual direction is documented in [DESIGN.md](DESIGN.md), and the
-complete reviewer narrative lives in [docs/CASE-STUDY.md](docs/CASE-STUDY.md).
+complete case-study narrative lives in [docs/CASE-STUDY.md](docs/CASE-STUDY.md).
 The technical one-pager and implementation postmortem are collected in
 [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
 
-## Reviewer routes
+## Verification routes
 
 The app deliberately offers two routes: run the booking surface yourself, or
 inspect the durable evidence. The public proof page links to the

@@ -8,6 +8,8 @@ target/
 node_modules/
 playwright-report/
 .env
+.vision
+VISION.md
 *.log
 .impeccable/
 .private-state/
