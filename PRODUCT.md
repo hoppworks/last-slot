@@ -10,7 +10,7 @@ web
 
 Flutter Web with Riverpod and GoRouter; a Rust Axum gateway calling a tonic
 booking service; PostgreSQL through SQLx; Docker Compose for local orchestration;
-and Playwright with TypeScript in GitHub Actions.
+and Patrol Web in GitHub Actions.
 
 ## Users
 
@@ -24,7 +24,7 @@ and concurrent use.
 Last Slot is a small, executable reliability case study. It lets two visitors
 compete for the same final appointment and proves that exactly one booking is
 created. Success means a reviewer can understand the invariant quickly, run the
-system locally, inspect the Playwright evidence, and trace the behavior across
+system locally, inspect the Patrol evidence, and trace the behavior across
 the browser, API, service, and database.
 
 ## Positioning
@@ -62,7 +62,7 @@ evidence; synthetic demonstration data is labeled as such.
 
 ## Evidence on Hand
 
-The confirmed evidence target is the Playwright journey, its trace and report,
+The confirmed evidence target is the Patrol journey, its trace and report,
 the database constraints, and CI output. There are no customer testimonials,
 performance benchmarks, uptime claims, or commercial deployment claims, and
 future work must not invent them.
@@ -70,10 +70,10 @@ future work must not invent them.
 ## Approved Design Direction
 
 The approved direction is implemented as a clean engineering case study:
-white canvas, strong blue identity, direct proposition, booking and ledger
-surfaces, a compact architecture flow, and a factual proof strip. The paired
-browser experience is supplied by the executable Playwright journey rather
-than by decorative screenshots.
+warm editorial canvas, restrained forest-green identity, Manrope and mono
+type contrast, booking and ledger surfaces, a compact architecture flow, and a
+factual proof strip. The paired browser experience is supplied by the
+executable Patrol journey rather than by decorative screenshots.
 
 ## Product Principles
 

@@ -59,13 +59,13 @@ jobs:
       - name: Product E2E (Patrol Web)
         run: bash scripts/e2e.sh
 
-      - name: Upload Patrol evidence
+      - name: Upload Patrol browser evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: patrol-evidence
+          name: patrol-browser-evidence
           path: |
-            build/patrol/**
+            build/playwright/**
             build/compose.log
           if-no-files-found: warn
 
@@ -73,11 +73,11 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
-      - name: Package Patrol report for Pages
+      - name: Package Patrol browser report for Pages
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
-          path: build/patrol/html
+          path: build/playwright/html
 
   deploy-report:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -87,6 +87,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Publish Patrol report
+      - name: Publish Patrol browser report
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

@@ -60,8 +60,6 @@ wait_for_url "http://127.0.0.1:8081/healthz" "Flutter web"
     --web-retries 0 \
     --web-timeout 60000 \
     --web-global-timeout 180000 \
-    --web-report-dir ../../build/patrol/html \
-    --web-results-dir ../../build/patrol/results \
     --web-trace retain-on-failure \
     --web-screenshot only-on-failure \
     --no-check-compatibility

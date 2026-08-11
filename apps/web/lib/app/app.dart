@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/link.dart';
 
 import '../features/booking/data/booking_models.dart';
 import '../features/booking/providers.dart';
 
-const _ink = Color(0xFF101A2B);
-const _blue = Color(0xFF1463D9);
-const _green = Color(0xFF097A55);
+const _ink = Color(0xFF18211D);
+const _blue = Color(0xFF315F4E);
+const _green = Color(0xFF315F4E);
 const _red = Color(0xFFB42318);
-const _paper = Color(0xFFF8FAFC);
-const _line = Color(0xFFD8E0EA);
+const _paper = Color(0xFFF7F6F1);
+const _line = Color(0xFFD9DDD8);
+const _muted = Color(0xFF66706A);
 
 class LastSlotApp extends StatelessWidget {
   const LastSlotApp({super.key, this.initialLocation});
@@ -27,6 +30,7 @@ class LastSlotApp extends StatelessWidget {
         GoRoute(path: '/', redirect: (_, _) => '/book'),
         GoRoute(path: '/book', builder: (_, _) => const BookingPage()),
         GoRoute(path: '/admin', builder: (_, _) => const AdminPage()),
+        GoRoute(path: '/proof', builder: (_, _) => const ProofPage()),
       ],
     );
     return MaterialApp.router(
@@ -40,24 +44,40 @@ class LastSlotApp extends StatelessWidget {
           brightness: Brightness.light,
           surface: Colors.white,
         ),
-        textTheme: const TextTheme(
-          displaySmall: TextStyle(
+        textTheme: GoogleFonts.manropeTextTheme().copyWith(
+          displaySmall: const TextStyle(
             fontSize: 44,
-            height: 1.05,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -1.5,
+            height: .98,
+            fontWeight: FontWeight.w500,
+            letterSpacing: -2.2,
             color: _ink,
           ),
-          headlineMedium: TextStyle(
+          headlineMedium: const TextStyle(
             fontSize: 28,
-            height: 1.15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -.6,
+            height: 1.05,
+            fontWeight: FontWeight.w500,
+            letterSpacing: -1.1,
             color: _ink,
           ),
-          titleLarge: TextStyle(fontWeight: FontWeight.w700, color: _ink),
-          bodyLarge: TextStyle(fontSize: 17, height: 1.55, color: _ink),
-          bodyMedium: TextStyle(fontSize: 14, height: 1.45, color: _ink),
+          titleLarge: const TextStyle(fontWeight: FontWeight.w600, color: _ink),
+          bodyLarge: const TextStyle(fontSize: 17, height: 1.62, color: _ink),
+          bodyMedium: const TextStyle(fontSize: 14, height: 1.55, color: _ink),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: .78),
+          labelStyle: const TextStyle(color: _muted),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _line),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: _ink,
+            foregroundColor: _paper,
+            shape: const StadiumBorder(),
+          ),
         ),
       ),
       routerConfig: router,
@@ -74,6 +94,7 @@ class BookingPage extends ConsumerStatefulWidget {
 
 class _BookingPageState extends ConsumerState<BookingPage> {
   final _nameController = TextEditingController();
+  final _bookingCardKey = GlobalKey();
 
   @override
   void dispose() {
@@ -90,8 +111,21 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 860;
-          final intro = _Intro(wide: wide);
+          final intro = _Intro(
+            wide: wide,
+            onRunUiProof: () {
+              final cardContext = _bookingCardKey.currentContext;
+              if (cardContext != null) {
+                Scrollable.ensureVisible(
+                  cardContext,
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                );
+              }
+            },
+          );
           final booking = _BookingCard(
+            key: _bookingCardKey,
             slot: slot,
             attempt: attempt,
             nameController: _nameController,
@@ -172,6 +206,112 @@ class AdminPage extends ConsumerWidget {
   }
 }
 
+class ProofPage extends StatelessWidget {
+  const ProofPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => _PageFrame(
+    currentPath: '/proof',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Eyebrow('EVIDENCE, NOT A CLAIM'),
+        const SizedBox(height: 18),
+        Text(
+          'Choose how deeply\nyou want to verify it.',
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        const SizedBox(height: 20),
+        const SizedBox(
+          width: 680,
+          child: Text(
+            'The browser journey exercises the public UI. The proof path explains where the durable guarantee lives and what the report can verify.',
+          ),
+        ),
+        const SizedBox(height: 42),
+        const _ProofPath(),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: const [
+            _EvidenceLink(
+              label: 'Open Patrol test source',
+              icon: Icons.code_rounded,
+              uri:
+                  'https://github.com/hoppworks/last-slot/blob/main/apps/web/patrol_test/last_slot_test.dart',
+            ),
+            _EvidenceLink(
+              label: 'Open CI evidence',
+              icon: Icons.verified_outlined,
+              uri: 'https://github.com/hoppworks/last-slot/actions',
+              filled: true,
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxWidth: 780),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .76),
+            border: Border.all(color: _line),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Eyebrow('REPRODUCE LOCALLY'),
+              SizedBox(height: 12),
+              SelectableText(
+                'bash scripts/e2e.sh',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Patrol opens two browser pages, performs physical keyboard input, submits both booking attempts, and verifies the public ledger audit entry. Retries are disabled.',
+                style: TextStyle(color: _muted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _EvidenceLink extends StatelessWidget {
+  const _EvidenceLink({
+    required this.label,
+    required this.icon,
+    required this.uri,
+    this.filled = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final String uri;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) => Link(
+    uri: Uri.parse(uri),
+    target: LinkTarget.blank,
+    builder: (context, followLink) => filled
+        ? FilledButton.icon(
+            onPressed: followLink,
+            icon: Icon(icon),
+            label: Text(label),
+          )
+        : OutlinedButton.icon(
+            onPressed: followLink,
+            icon: Icon(icon),
+            label: Text(label),
+          ),
+  );
+}
+
 class _PageFrame extends StatelessWidget {
   const _PageFrame({required this.currentPath, required this.child});
 
@@ -185,9 +325,9 @@ class _PageFrame extends StatelessWidget {
         child: SingleChildScrollView(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1180),
+              constraints: const BoxConstraints(maxWidth: 1160),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 64),
+                padding: const EdgeInsets.fromLTRB(24, 26, 24, 80),
                 child: Column(
                   children: [
                     _Header(currentPath: currentPath),
@@ -215,9 +355,13 @@ class _Header extends StatelessWidget {
       children: [
         const Icon(Icons.radio_button_checked_rounded, color: _blue, size: 21),
         const SizedBox(width: 9),
-        const Text(
+        Text(
           'LAST SLOT',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.4),
+          style: GoogleFonts.ibmPlexMono(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 1.4,
+          ),
         ),
         const Spacer(),
         TextButton(
@@ -230,15 +374,22 @@ class _Header extends StatelessWidget {
               : () => context.go('/admin'),
           child: const Text('Ledger'),
         ),
+        TextButton(
+          onPressed: currentPath == '/proof'
+              ? null
+              : () => context.go('/proof'),
+          child: const Text('Proof'),
+        ),
       ],
     );
   }
 }
 
 class _Intro extends StatelessWidget {
-  const _Intro({required this.wide});
+  const _Intro({required this.wide, required this.onRunUiProof});
 
   final bool wide;
+  final VoidCallback onRunUiProof;
 
   @override
   Widget build(BuildContext context) {
@@ -262,6 +413,23 @@ class _Intro extends StatelessWidget {
         ),
         const SizedBox(height: 30),
         Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            FilledButton.icon(
+              onPressed: onRunUiProof,
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: const Text('Try the UI proof'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/proof'),
+              icon: const Icon(Icons.account_tree_outlined),
+              label: const Text('Inspect the evidence'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 26),
+        Wrap(
           spacing: 10,
           runSpacing: 10,
           children: const [
@@ -277,6 +445,7 @@ class _Intro extends StatelessWidget {
 
 class _BookingCard extends StatelessWidget {
   const _BookingCard({
+    super.key,
     required this.slot,
     required this.attempt,
     required this.nameController,
@@ -356,10 +525,7 @@ class _BookingForm extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          _formatDate(slot.startsAt),
-          style: const TextStyle(color: Color(0xFF536174)),
-        ),
+        Text(_formatDate(slot.startsAt), style: const TextStyle(color: _muted)),
         const SizedBox(height: 20),
         _SlotState(status: slot.status),
         const SizedBox(height: 24),
@@ -494,22 +660,29 @@ class _ResultBanner extends StatelessWidget {
   }
 }
 
-class _LedgerCard extends StatelessWidget {
+class _LedgerCard extends StatefulWidget {
   const _LedgerCard({required this.slot});
 
   final SlotSnapshot slot;
 
   @override
+  State<_LedgerCard> createState() => _LedgerCardState();
+}
+
+class _LedgerCardState extends State<_LedgerCard> {
+  var _auditDetailsVisible = false;
+
+  @override
   Widget build(BuildContext context) {
-    final booking = slot.booking;
-    final booked = slot.status == SlotStatus.booked;
+    final booking = widget.slot.booking;
+    final booked = widget.slot.status == SlotStatus.booked;
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 780),
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: .76),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: _line),
       ),
       child: Column(
@@ -519,11 +692,11 @@ class _LedgerCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  slot.title,
+                  widget.slot.title,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              _SlotState(status: slot.status),
+              _SlotState(status: widget.slot.status),
             ],
           ),
           const Divider(height: 34),
@@ -557,8 +730,36 @@ class _LedgerCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Recorded ${_formatDate(booking.createdAt)}',
-              style: const TextStyle(color: Color(0xFF536174)),
+              style: const TextStyle(color: _muted),
             ),
+            const SizedBox(height: 18),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  setState(() => _auditDetailsVisible = !_auditDetailsVisible),
+              icon: Icon(
+                _auditDetailsVisible
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+              ),
+              label: Text(
+                _auditDetailsVisible
+                    ? 'Hide booking audit'
+                    : 'Inspect 1 confirmed booking',
+              ),
+            ),
+            if (_auditDetailsVisible) ...[
+              const SizedBox(height: 14),
+              Semantics(
+                container: true,
+                label: 'Audit detail: one persisted booking',
+                child: ExcludeSemantics(
+                  child: Text(
+                    'One persisted booking. The public ledger confirms the database invariant.',
+                    style: const TextStyle(color: _muted),
+                  ),
+                ),
+              ),
+            ],
           ] else
             const Text('No booking has been persisted yet.'),
         ],

@@ -8,6 +8,7 @@ const _appUrl = String.fromEnvironment(
 
 final _nameField = WebSelector(role: 'textbox');
 final _bookButton = WebSelector(text: 'Book the last slot');
+final _inspectLedger = WebSelector(text: 'Inspect 1 confirmed booking');
 
 Future<void> _enterName(PatrolIntegrationTester $, String name) async {
   await $.platform.web.tap(_nameField);
@@ -49,8 +50,9 @@ void main() {
       final ledger = await $.platform.web.openNewPage(url: _e2eUrl('/admin'));
       await $.platform.web.switchToPage(pageId: ledger);
 
-      // Opening the independent ledger page is deliberately the public read
-      // path: no database or private API assertion participates in this test.
+      // This only exists when the public ledger has loaded exactly one booking.
+      // No database or private API assertion participates in this proof.
+      await $.platform.web.tap(_inspectLedger);
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );

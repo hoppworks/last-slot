@@ -23,6 +23,15 @@ complete reviewer narrative lives in [docs/CASE-STUDY.md](docs/CASE-STUDY.md).
 The technical one-pager and implementation postmortem are collected in
 [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
 
+## Reviewer routes
+
+The app deliberately offers two routes: run the booking surface yourself, or
+inspect the durable evidence. The public proof page links to the
+[Patrol test source](https://github.com/hoppworks/last-slot/blob/main/apps/web/patrol_test/last_slot_test.dart)
+and the [GitHub Actions evidence](https://github.com/hoppworks/last-slot/actions).
+The latter provides the HTML report once a successful `main` run can publish
+GitHub Pages.
+
 ## Target proof
 
 Prerequisites are Docker, Flutter 3.44.2, and Node.js 22. Patrol manages
@@ -39,7 +48,7 @@ HTML report and trace, and tears the runtime down again.
 To inspect the local report:
 
 ```bash
-open build/patrol/html/index.html
+open build/playwright/html/index.html
 ```
 
 CI runs the same command. Failed runs retain screenshots, video, trace, JUnit
