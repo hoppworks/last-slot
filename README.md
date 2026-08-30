@@ -30,6 +30,31 @@ inspect the durable evidence. The public proof page links to the
 The repository also contains the reproducible HTTP/DB proof in
 [`scripts/http_integration.sh`](scripts/http_integration.sh).
 
+## Run this demo with a coding agent
+
+For a guided local walkthrough, copy the following prompt into a coding agent
+after opening this repository. It is deliberately scoped to preparing and
+running the existing demo, not changing the project.
+
+```text
+You are preparing a local technical demo of the Last Slot repository for a recruiter.
+
+Goal: install the required dependencies, run the complete verified demo, and leave me with a concise evidence-based summary. Do not change product code or rewrite the repository.
+
+Work with three focused subagents in parallel:
+1. Environment: inspect README.md and verify Docker Compose, Flutter 3.44.2, and Node.js 22. Install or report only the missing prerequisites.
+2. Demo: inspect the documented run path and prepare the repository exactly as its README requires. Do not start competing copies of the stack.
+3. Evidence: read the repository's test and architecture documentation. Prepare a short explanation of what the demo proves and its deliberate limits.
+
+Then coordinate the work:
+- Follow README.md as the source of truth.
+- Run bash scripts/e2e.sh from the repository root.
+- If the command succeeds, open build/playwright/html/index.html so the visual test report is ready to inspect.
+- If it fails, preserve the useful output and explain the smallest concrete next step; do not guess or make unrelated changes.
+
+Finish with: prerequisites found, command run, pass/fail evidence, report location, what the demo proves, and any remaining blocker.
+```
+
 ## Target proof
 
 Prerequisites are Docker, Flutter 3.44.2, and Node.js 22. Patrol manages

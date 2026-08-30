@@ -56,6 +56,9 @@ jobs:
           flutter analyze
           flutter test
 
+      - name: WebMCP contract checks
+        run: node --test tests/webmcp_tools.test.mjs
+
       - name: Product E2E (Patrol Web)
         run: bash scripts/e2e.sh
 
