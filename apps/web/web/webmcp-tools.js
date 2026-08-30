@@ -32,7 +32,7 @@ export function createLastSlotTools() {
     {
       name: "get_project_overview",
       description:
-        "Summarize the Last Slot reliability case study, its current proof status, and Daniel Hopp's engineering contribution.",
+        "Summarize the Last Slot browser-automation case study, its evidence boundary, and Daniel Hopp's engineering contribution.",
       inputSchema: {
         type: "object",
         properties: {},
@@ -42,10 +42,11 @@ export function createLastSlotTools() {
       execute: async () =>
         JSON.stringify({
           project: "Last Slot",
-          thesis: "One slot. Two browsers. One correct result.",
+          thesis:
+            "Browser-verified reliability. Two user journeys. One durable result.",
           status: "executable proof",
           summary:
-            "A Rust, Flutter, and PostgreSQL reliability case study in which two independent browser sessions compete for one appointment and exactly one booking is persisted.",
+            "An intentionally small Rust, Flutter, and PostgreSQL case study showing how zero-retry browser automation, public readback, and a separate HTTP/database proof combine into inspectable end-to-end evidence.",
           contribution:
             "Daniel Hopp designed and implemented the case study, architecture, application, contracts, and end-to-end proof.",
         }),
@@ -97,7 +98,7 @@ export function createLastSlotTools() {
             "Deployable Docker Compose case study, not a public multi-tenant booking product",
           ],
           reason:
-            "The scope stays focused on one complete, inspectable concurrency invariant.",
+            "The simple product scenario keeps the complete browser-to-database evidence path inspectable.",
         }),
     },
     {

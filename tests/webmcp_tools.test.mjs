@@ -18,7 +18,8 @@ test("exposes the Last Slot project thesis as a read-only WebMCP tool", async ()
 
   const result = JSON.parse(await overview.execute({}));
   assert.equal(result.project, "Last Slot");
-  assert.match(result.thesis, /One slot\. Two browsers\. One correct result\./);
+  assert.match(result.thesis, /Browser-verified reliability/);
+  assert.match(result.summary, /zero-retry browser automation/);
   assert.equal(result.status, "executable proof");
 });
 

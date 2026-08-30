@@ -1,10 +1,14 @@
-# Last Slot — technical one-pager
+# Last Slot — browser-verified reliability
 
-## The problem
+## The testing question
 
-Two visitors can see the same final appointment and submit at the same time.
-The product must never imply that both succeeded when only one persisted
-booking is valid.
+Can an automated browser test prove that a cross-layer reliability guarantee is
+visible to real users, rather than merely green inside unit and API tests?
+
+Last Slot keeps the product scenario deliberately small: two visitors see the
+same final appointment, but only one booking may survive. That makes the full
+evidence path understandable in minutes while still crossing Flutter, HTTP,
+gRPC, PostgreSQL, and independent browser contexts.
 
 ## The invariant
 
@@ -32,16 +36,22 @@ cannot weaken either guarantee.
 | Temporary service failure | Safe retry of the same intent | `503 Retry-After` |
 | Invalid customer name | Actionable validation message | `422` |
 
-## The proof
+## The evidence design
 
-The HTTP/DB integration proof opens two real HTTP clients behind a process
-barrier, then verifies one `201`, one `409`, and exactly one database row. It
-also sends one idempotency key twice and verifies `201 → 200`, the same booking
-ID, and exactly one database row. The Patrol Web test then opens two browser
-pages, uses actual keyboard input, visibly verifies one confirmation and one
-conflict, opens two fresh visitor pages into the persisted booked state, and
-opens a fresh `/admin` browser. It has `retries: 0`, calls no database or test-only
-endpoint, and retains a trace for every run.
+The Patrol Web journey opens two browser pages, uses actual keyboard input,
+visibly verifies one confirmation and one conflict, opens two fresh visitor
+pages into the persisted booked state, and opens a fresh admin browser. It has
+`retries: 0`, calls no database or test-only endpoint, and retains a trace for
+every run.
+
+A separate HTTP/database proof owns the part a UI test should not fake. It
+releases two real HTTP clients behind a process barrier and verifies one `201`,
+one `409`, and exactly one database row. It also sends one idempotency key twice
+and verifies `201 → 200`, the same booking ID, and one durable row.
+
+The two layers meet at the public contract: one establishes the durable
+invariant; the other proves that fresh users can observe the correct result
+through the real interface.
 
 Run it locally with `bash scripts/e2e.sh`. CI runs the same command and publishes
 the report from successful `main` builds.
@@ -62,21 +72,23 @@ longer substantiate the invariant. This is intentionally not a runtime switch
 in the public demo; it is a documented failure mode of the durable guard, not a
 feature for users to trigger.
 
-## Two-minute demo and STAR narrative
+## Two-minute browser demo and STAR narrative
 
 **Demo:** Open two fresh browser windows on `/book`, enter Ada and Linus, then
 submit one after the other to show the same public confirmation/conflict
 outcomes. Open `/admin`, show exactly one booked name, then open two fresh
-visitor pages. The accompanying HTTP/DB proof releases the truly concurrent requests;
+visitor pages. The accompanying HTTP/DB proof releases barrier-synchronised
+competing requests;
 the Patrol report records the browser-visible journey without retries.
 
-**Situation:** a last appointment is shown to two people at once. **Task:**
-guarantee that the application never represents two bookings as valid.
-**Action:** enforce the rule in PostgreSQL, make retries idempotent, expose a
-stable conflict contract, prove true concurrent HTTP requests with a barrier,
-and prove the visible result through separate browser contexts.
-**Result:** a fresh zero-retry browser run yields one persisted booking and an
-inspectable trace; no production-scale or uptime claim is implied.
+**Situation:** unit and service tests cannot establish that a real browser shows
+the truth after a cross-layer race. **Task:** make the reliability guarantee
+visible and independently inspectable. **Action:** enforce the rule in
+PostgreSQL, expose stable error semantics, prove barrier-released HTTP requests,
+then drive separate browser contexts through confirmation, conflict, and fresh
+readback. **Result:** one command produces the durable invariant plus a
+zero-retry browser report and trace; no production-scale or uptime claim is
+implied.
 
 # Postmortem — making the proof real
 
@@ -96,6 +108,6 @@ unit tests alone could not prove:
    silently render the booking page. Production now derives the initial route
    from the browser URL, while tests can explicitly set their start route.
 
-The lesson is the thesis of the project in miniature: a green unit layer is not
-enough. The real public path, with separate browsers and a fresh readback, is
-where hidden integration assumptions become observable.
+The lesson is the thesis of the project: a green unit layer is not enough. The
+real public path, with separate browsers and a fresh readback, is where hidden
+integration assumptions become observable.

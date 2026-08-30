@@ -1,74 +1,56 @@
 # Last Slot
 
-**One slot. Two browsers. One correct result.**
+**Browser-verified reliability. Two user journeys. One durable result.**
 
-Last Slot is an executable reliability case study. Two independent browser
-sessions try to book the same final appointment. PostgreSQL permits exactly one
-winner, the losing browser receives an honest conflict, and an admin view reads
-the persisted outcome through the same public API.
+Last Slot is an intentionally small end-to-end testing case study. It shows how
+automated browser testing can verify user-visible behavior across a real
+Flutter interface, versioned Rust services, and persisted PostgreSQL state.
 
-The point is not that Patrol makes software reliable. The database
-invariant, idempotent API, and explicit error semantics make the behavior
-reliable. Patrol proves that those guarantees survive the complete user
-journey.
+The appointment race keeps the scenario understandable. The engineering work
+is the evidence chain: two isolated browser contexts, real keyboard input,
+explicit confirmation and conflict states, fresh-page readback, an admin
+readback, zero test retries, and an inspectable report and trace.
 
-> **Current milestone — executable proof:** the complete Flutter surface,
-> PostgreSQL invariant, versioned API, Rust services, Docker topology, a
-> barrier-synchronised HTTP/DB integration proof, and a zero-retry two-browser
-> Patrol journey are implemented. A fresh local run produces their evidence.
+## What the browser journey proves
 
-The approved visual direction is documented in [DESIGN.md](DESIGN.md), and the
-complete case-study narrative lives in [docs/CASE-STUDY.md](docs/CASE-STUDY.md).
-The technical one-pager and implementation postmortem are collected in
-[docs/PORTFOLIO.md](docs/PORTFOLIO.md).
+Patrol drives only visible, accessible product behavior:
 
-## Verification routes
+1. Two independent browser pages enter different booking intents.
+2. One page shows the confirmed booking and the other shows the explicit
+   conflict through the public Flutter interface.
+3. Two fresh visitor pages read the persisted booked state through the same
+   public API.
+4. A fresh admin page visibly reads exactly one confirmed booking.
+5. The journey runs with zero retries and records a trace for inspection.
 
-The app deliberately offers two routes: run the booking surface yourself, or
-inspect the durable evidence. The public proof page links to the
-[Patrol test source](https://github.com/hoppworks/last-slot/blob/main/apps/web/patrol_test/last_slot_test.dart).
-The repository also contains the reproducible HTTP/DB proof in
-[`scripts/http_integration.sh`](scripts/http_integration.sh).
+The browser journey does not query PostgreSQL or use a test-only endpoint. It
+proves that the behavior a user sees survives the complete application path.
 
-## Run this demo with a coding agent
+## Why there are two proof layers
 
-For a guided local walkthrough, copy the following prompt into a coding agent
-after opening this repository. It is deliberately scoped to preparing and
-running the existing demo, not changing the project.
+| Evidence layer | What it proves | What it deliberately does not claim |
+| --- | --- | --- |
+| Automated browser journey | Visible confirmation, visible conflict, fresh visitor readback, and admin readback through the real UI | Database row counts or simultaneous request arrival |
+| HTTP/database integration proof | Barrier-released competing requests produce `201 + 409`, one durable row, and stable idempotent replay | Browser rendering or accessible interaction |
+| PostgreSQL constraints | At most one booking per slot and one result per idempotency key | That every application layer presents the result honestly |
 
-```text
-You are preparing a local technical demo of the Last Slot repository for a recruiter.
+Together they form one executable end-to-end argument without asking a UI test
+to inspect implementation details that a user cannot observe.
 
-Goal: install the required dependencies, run the complete verified demo, and leave me with a concise evidence-based summary. Do not change product code or rewrite the repository.
+## Run the complete evidence path
 
-Work with three focused subagents in parallel:
-1. Environment: inspect README.md and verify Docker Compose, Flutter 3.44.2, and Node.js 22. Install or report only the missing prerequisites.
-2. Demo: inspect the documented run path and prepare the repository exactly as its README requires. Do not start competing copies of the stack.
-3. Evidence: read the repository's test and architecture documentation. Prepare a short explanation of what the demo proves and its deliberate limits.
-
-Then coordinate the work:
-- Follow README.md as the source of truth.
-- Run bash scripts/e2e.sh from the repository root.
-- If the command succeeds, open build/playwright/html/index.html so the visual test report is ready to inspect.
-- If it fails, preserve the useful output and explain the smallest concrete next step; do not guess or make unrelated changes.
-
-Finish with: prerequisites found, command run, pass/fail evidence, report location, what the demo proves, and any remaining blocker.
-```
-
-## Target proof
-
-Prerequisites are Docker, Flutter 3.44.2, and Node.js 22. Patrol manages
+Prerequisites are Docker Compose, Flutter 3.44.2, and Node.js 22. Patrol manages
 Chromium through its web runner.
 
 ```bash
 bash scripts/e2e.sh
 ```
 
-The command builds the Flutter web app, starts the complete runtime with Docker
-Compose, releases two HTTP booking requests through a barrier, verifies the
-database counts and idempotent replay, runs the two-browser journey with zero
-retries, writes the Patrol HTML report and trace, and tears the runtime down
-again.
+The command builds the Flutter app, starts the real containerized runtime,
+verifies the HTTP/database invariants, runs the automated browser journey, and
+tears the runtime down again. A successful run leaves an HTML report and trace;
+a failed run retains screenshots, video, trace, HTTP/database evidence, and
+service logs.
 
 To inspect the local report:
 
@@ -76,36 +58,23 @@ To inspect the local report:
 open build/playwright/html/index.html
 ```
 
-CI runs the same command. Failed runs retain screenshots, video, trace, HTTP/DB
-evidence, and service logs as workflow artifacts; successful `main` runs
-publish the Patrol HTML report on GitHub Pages.
+CI runs the same command and publishes the successful browser report. The
+[technical one-pager](docs/PORTFOLIO.md) explains the design decisions and the
+[case-study brief](docs/CASE-STUDY.md) defines the exact evidence boundary.
 
-## Setup and limits
+<details>
+<summary>Run it with a coding agent</summary>
 
-The verified local target is macOS or Linux with Docker Compose, Flutter
-3.44.2 and Node.js 22. Patrol installs its browser runtime. The demo
-uses synthetic data and local containers; it is deployable as the supplied
-Docker Compose stack, but is intentionally not an authenticated, public
-multi-tenant booking product. The published web app and API share one origin:
-Nginx serves the Flutter bundle and proxies `/v1` to the internal gateway, so
-the browser never depends on its own `localhost`. See
-[docs/PORTFOLIO.md](docs/PORTFOLIO.md) for
-the negative case and presentation script.
+```text
+Prepare and run the existing Last Slot browser-evidence demo without changing product code.
 
-## What the journey proves
+1. Read README.md and verify Docker Compose, Flutter 3.44.2, and Node.js 22.
+2. Run bash scripts/e2e.sh from the repository root.
+3. If it succeeds, open build/playwright/html/index.html.
+4. Report the browser journey, HTTP/database result, retry count, retained artifacts, and any blocker. Do not infer evidence that the run did not produce.
+```
 
-The test interacts only through visible Flutter semantics:
-
-1. Ada and Linus open the booking surface in separate browser contexts.
-2. The stack integration proof releases two HTTP requests for a separate
-   fixture slot concurrently and verifies `201 + 409` and one database row.
-3. The two browser pages visibly show one confirmation and one conflict.
-4. Two fresh visitor pages visibly load the persisted booked state.
-5. A fresh admin browser reads exactly one confirmed booking.
-
-Patrol never queries PostgreSQL directly; it proves the same public path a user
-experiences. The separate stack test queries the database only to prove the
-durable invariant and idempotency contract that a browser cannot observe.
+</details>
 
 ## Architecture
 
@@ -149,7 +118,7 @@ the exact public semantics.
 Last Slot uses synthetic demonstration data. It has no authentication, payment
 flow, Kubernetes deployment, customer claims, uptime claim, or invented
 benchmark. Those omissions keep the repository focused on one complete,
-inspectable invariant.
+inspectable browser-to-database evidence path.
 
 
 ## License

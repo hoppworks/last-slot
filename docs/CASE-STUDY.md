@@ -2,25 +2,29 @@
 
 ## The claim
 
-A single appointment can be offered to multiple visitors without being booked
-twice, even when requests arrive concurrently or a client retries after an
-uncertain response.
+Automated browser testing can make a cross-layer reliability guarantee
+inspectable through the same interface and public API that real users see.
 
-## The proof
+The underlying product invariant remains precise: a single appointment can be
+offered to multiple visitors without being booked twice, even when requests
+compete or a client retries after an uncertain response.
+
+## The browser proof
+
+One zero-retry Patrol Web journey opens two browser pages, types through the
+real input path, and visibly verifies one confirmation and one explicit
+conflict. Two fresh visitor pages then load the persisted booked state, and a
+fresh admin page reads exactly one confirmed booking.
+
+The browser test uses only visible, accessible product behavior. It never
+queries PostgreSQL and never calls a test-only endpoint.
+
+## The durable proof
 
 The HTTP/DB integration proof releases two real HTTP clients through a process
 barrier for a dedicated synthetic fixture slot. It verifies one `201`, one
 `409`, and one database row. It also verifies that sending one idempotency key
 twice produces `201 → 200`, the same booking ID, and one database row.
-
-One Patrol Web test then opens two browser pages, fills the public slot for two
-different people, and visibly verifies one confirmation and one explicit
-conflict. A third browser opens the admin surface and reads one persisted
-booking. Two fresh visitor pages then load the public API state and visibly show
-that the slot is booked.
-
-The browser test may use only visible, accessible product behavior. It must not
-query PostgreSQL directly or call a test-only endpoint.
 
 ## Why the result is trustworthy
 
