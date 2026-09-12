@@ -113,7 +113,7 @@ impl BookingService for BookingApi {
         .bind(idempotency_key)
         .fetch_optional(&self.pool)
         .await
-        .map_err(internal_status)?;
+        .map_err(database_status)?;
 
         if let Some(booking) = inserted {
             let slot = load_slot(&self.pool, slot_id).await?;
@@ -163,7 +163,7 @@ async fn load_slot(pool: &PgPool, slot_id: Uuid) -> Result<Slot, Status> {
     .bind(slot_id)
     .fetch_optional(pool)
     .await
-    .map_err(internal_status)?
+    .map_err(database_status)?
     .map(SlotRow::into_proto)
     .ok_or_else(|| Status::not_found("slot_not_found"))
 }
@@ -182,7 +182,7 @@ async fn find_by_idempotency_key(
     .bind(idempotency_key)
     .fetch_optional(pool)
     .await
-    .map_err(internal_status)
+    .map_err(database_status)
 }
 
 async fn replay_response(
@@ -202,9 +202,41 @@ async fn replay_response(
     }))
 }
 
-fn internal_status(error: sqlx::Error) -> Status {
+/// Maps a database failure onto the public gRPC contract.
+///
+/// Connectivity loss, pool exhaustion, and server-side outages are temporary:
+/// the gateway turns `Unavailable` into `503` with `Retry-After`, so the same
+/// intent can be retried safely under its idempotency key. Every other database
+/// error is an internal defect and must not be presented as retryable.
+fn database_status(error: sqlx::Error) -> Status {
+    if is_temporary_outage(&error) {
+        tracing::warn!(%error, "database temporarily unavailable");
+        return Status::unavailable("database_unavailable");
+    }
     tracing::error!(%error, "database operation failed");
     Status::internal("internal_error")
+}
+
+fn is_temporary_outage(error: &sqlx::Error) -> bool {
+    match error {
+        sqlx::Error::Io(_)
+        | sqlx::Error::Tls(_)
+        | sqlx::Error::PoolTimedOut
+        | sqlx::Error::PoolClosed
+        | sqlx::Error::WorkerCrashed => true,
+        sqlx::Error::Database(database_error) => database_error
+            .code()
+            .is_some_and(|code| is_transient_sqlstate(&code)),
+        _ => false,
+    }
+}
+
+/// PostgreSQL SQLSTATE classes that describe an outage rather than a defect:
+/// `08` connection exception, `53` insufficient resources (for example
+/// `53300 too_many_connections`), and `57` operator intervention (for example
+/// `57P01 admin_shutdown`, `57P03 cannot_connect_now`).
+fn is_transient_sqlstate(code: &str) -> bool {
+    code.starts_with("08") || code.starts_with("53") || code.starts_with("57")
 }
 
 #[tokio::main]
@@ -238,9 +270,99 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::{borrow::Cow, error::Error, fmt};
+
+    use sqlx::error::{DatabaseError, ErrorKind};
     use tonic::Code;
 
-    use super::{parse_uuid, validate_customer_name};
+    use super::{database_status, parse_uuid, validate_customer_name};
+
+    /// Stands in for a PostgreSQL error so the SQLSTATE classification can be
+    /// tested without a live database.
+    #[derive(Debug)]
+    struct FakeDatabaseError {
+        code: String,
+    }
+
+    impl FakeDatabaseError {
+        fn with_code(code: &str) -> sqlx::Error {
+            sqlx::Error::Database(Box::new(Self {
+                code: code.to_owned(),
+            }))
+        }
+    }
+
+    impl fmt::Display for FakeDatabaseError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "fake database error with SQLSTATE {}", self.code)
+        }
+    }
+
+    impl Error for FakeDatabaseError {}
+
+    impl DatabaseError for FakeDatabaseError {
+        fn message(&self) -> &str {
+            "fake database error"
+        }
+
+        fn code(&self) -> Option<Cow<'_, str>> {
+            Some(Cow::Borrowed(&self.code))
+        }
+
+        fn as_error(&self) -> &(dyn Error + Send + Sync + 'static) {
+            self
+        }
+
+        fn as_error_mut(&mut self) -> &mut (dyn Error + Send + Sync + 'static) {
+            self
+        }
+
+        fn into_error(self: Box<Self>) -> Box<dyn Error + Send + Sync + 'static> {
+            self
+        }
+
+        fn kind(&self) -> ErrorKind {
+            ErrorKind::Other
+        }
+    }
+
+    #[test]
+    fn pool_exhaustion_is_a_temporary_outage() {
+        let status = database_status(sqlx::Error::PoolTimedOut);
+        assert_eq!(status.code(), Code::Unavailable);
+        assert_eq!(status.message(), "database_unavailable");
+    }
+
+    #[test]
+    fn a_lost_connection_is_a_temporary_outage() {
+        let io_error = std::io::Error::new(
+            std::io::ErrorKind::ConnectionReset,
+            "connection reset by peer",
+        );
+        let status = database_status(sqlx::Error::Io(io_error));
+        assert_eq!(status.code(), Code::Unavailable);
+    }
+
+    #[test]
+    fn server_shutdown_and_connection_sqlstates_are_temporary_outages() {
+        for sqlstate in ["57P01", "57P03", "08006", "53300"] {
+            let status = database_status(FakeDatabaseError::with_code(sqlstate));
+            assert_eq!(status.code(), Code::Unavailable, "SQLSTATE {sqlstate}");
+        }
+    }
+
+    #[test]
+    fn constraint_violations_stay_internal() {
+        let status = database_status(FakeDatabaseError::with_code("23505"));
+        assert_eq!(status.code(), Code::Internal);
+        assert_eq!(status.message(), "internal_error");
+    }
+
+    #[test]
+    fn unexpected_query_results_stay_internal() {
+        let status = database_status(sqlx::Error::RowNotFound);
+        assert_eq!(status.code(), Code::Internal);
+    }
 
     #[test]
     fn customer_name_is_trimmed_before_persistence() {

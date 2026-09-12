@@ -13,11 +13,14 @@ the admin readback.
   `404` for an unknown slot and sets `Cache-Control: no-store` so read-after-write
   behavior stays explicit.
 - `POST /v1/slots/{slotId}/bookings` requires an `Idempotency-Key` header and a
-  `{ "customerName": string }` body. A new booking returns `201` and a
-  `Location` header. Replaying the same key returns the original result with
-  `200`. A competing booking returns `409` with code `slot_taken`. Invalid input
-  returns `400`, `415`, or `422`; an unknown slot returns `404`. A temporarily
-  unavailable service returns `503` with `Retry-After: 1`.
+  `{ "customerName": string }` body. A new booking returns `201` with the
+  persisted booking and slot in the body; there is no separate booking resource,
+  so read-after-write uses `GET /v1/slots/{slotId}`. Replaying the same key
+  returns the original result with `200`; the same key with a different slot or
+  name returns `422` with code `idempotency_key_reused`. A competing booking
+  returns `409` with code `slot_taken`. Invalid input returns `400`, `415`, or
+  `422`; an unknown slot returns `404`. A temporarily unavailable booking
+  service or database returns `503` with `Retry-After: 1`.
 
 ## Authentication
 

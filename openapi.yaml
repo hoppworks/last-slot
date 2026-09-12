@@ -69,11 +69,9 @@ paths:
                   maxLength: 80
       responses:
         '201':
-          description: Booking created.
-          headers:
-            Location:
-              schema:
-                type: string
+          description: >-
+            Booking created. There is no separate booking resource; the
+            persisted state is read back through GET /v1/slots/{slotId}.
           content:
             application/json:
               schema:

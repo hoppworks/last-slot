@@ -261,26 +261,16 @@ async fn create_booking(
             json!({}),
         )
     })?;
+    // A booking has no addressable resource of its own: the persisted state is
+    // read back through `GET /v1/slots/{slot_id}`, so no `Location` header is
+    // sent. Advertising a URL that does not resolve would be worse than none.
     let status = if response.replayed {
         StatusCode::OK
     } else {
         StatusCode::CREATED
     };
-    let mut response_headers = HeaderMap::new();
-    response_headers.insert(
-        header::LOCATION,
-        HeaderValue::from_str(&format!("/v1/bookings/{}", booking.id)).map_err(|_| {
-            ApiError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "invalid_service_response",
-                "The booking service returned an invalid identifier.",
-                json!({}),
-            )
-        })?,
-    );
     Ok((
         status,
-        response_headers,
         Json(BookingResultDto {
             booking: booking_dto(booking),
             slot: slot_dto(slot),
