@@ -6,10 +6,11 @@ const READ_ONLY_ANNOTATIONS = Object.freeze({
 const CLAIM_EVIDENCE = Object.freeze({
   concurrency: {
     proof:
-      "A barrier releases two competing HTTP requests; the public API returns one 201 and one 409, and PostgreSQL contains exactly one booking row.",
+      "A best-effort barrier releases two competing HTTP requests; the public API returns one 201 and one 409, and PostgreSQL contains exactly one booking row.",
     artifact:
       "https://github.com/hoppworks/last-slot/blob/main/scripts/http_integration.sh",
-    limit: "The proof uses synthetic data in a local containerized stack.",
+    limit:
+      "The proof uses synthetic data in a local containerized stack and does not prove simultaneous arrival.",
   },
   idempotency: {
     proof:
@@ -20,7 +21,7 @@ const CLAIM_EVIDENCE = Object.freeze({
   },
   user_journey: {
     proof:
-      "A zero-retry Patrol run uses two independent browser pages, then fresh visitor and admin pages read the persisted winner through the public application path.",
+      "A zero-retry Patrol run drives two independent browser pages one after the other, then fresh visitor and admin pages read the persisted winner through the public application path.",
     artifact:
       "https://github.com/hoppworks/last-slot/blob/main/apps/web/patrol_test/last_slot_test.dart",
     limit: "The browser journey proves observable behavior, not the database row count by itself.",
@@ -32,7 +33,7 @@ export function createLastSlotTools() {
     {
       name: "get_project_overview",
       description:
-        "Summarize the Last Slot browser-automation case study, its evidence boundary, and Daniel Hopp's engineering contribution.",
+        "Summarize the Last Slot reliability case study, its evidence boundary, and Daniel Hopp's engineering contribution.",
       inputSchema: {
         type: "object",
         properties: {},
@@ -42,13 +43,12 @@ export function createLastSlotTools() {
       execute: async () =>
         JSON.stringify({
           project: "Last Slot",
-          thesis:
-            "Browser-verified reliability. Two user journeys. One durable result.",
+          thesis: "One slot. Two browsers. One correct result.",
           status: "executable proof",
           summary:
-            "An intentionally small Rust, Flutter, and PostgreSQL case study showing how zero-retry browser automation, public readback, and a separate HTTP/database proof combine into inspectable end-to-end evidence.",
+            "An intentionally small Rust, Flutter, and PostgreSQL reliability case study: a unique constraint decides the race, and zero-retry browser automation, public readback, and a separate HTTP/database proof make the result inspectable end to end.",
           contribution:
-            "Daniel Hopp designed and implemented the case study, architecture, application, contracts, and end-to-end proof.",
+            "Daniel Hopp designed the case study, architecture, API and database contracts, and the proof design. Parts of the implementation were built with coding agents under his review.",
         }),
     },
     {
@@ -117,7 +117,7 @@ export function createLastSlotTools() {
           command: "bash scripts/e2e.sh",
           report: "build/playwright/html/index.html",
           verifies:
-            "Rust and Flutter checks, HTTP/database concurrency and idempotency proof, and the zero-retry two-browser Patrol journey.",
+            "Rust and Flutter checks, HTTP/database concurrency and idempotency proof, and the zero-retry sequential two-page Patrol journey.",
           source: "https://github.com/hoppworks/last-slot",
         }),
     },

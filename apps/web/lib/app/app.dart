@@ -226,7 +226,7 @@ class ProofPage extends StatelessWidget {
         const SizedBox(
           width: 680,
           child: Text(
-            'The browser journey makes the public result visible. The HTTP and database proof establishes the simultaneous-request invariant and idempotent replay.',
+            'The browser journey makes the public result visible. The HTTP and database proof verifies one winner and one conflict under competing requests, plus idempotent replay. It does not prove simultaneous arrival.',
           ),
         ),
         const SizedBox(height: 42),

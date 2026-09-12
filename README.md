@@ -1,21 +1,26 @@
 # Last Slot
 
-**Browser-verified reliability. Two user journeys. One durable result.**
+**One slot. Two browsers. One correct result.**
 
-Last Slot is an intentionally small end-to-end testing case study. It shows how
-automated browser testing can verify user-visible behavior across a real
-Flutter interface, versioned Rust services, and persisted PostgreSQL state.
+Last Slot is an executable reliability case study. Two visitors try to book the
+same final appointment. PostgreSQL permits exactly one winner; the losing
+visitor sees an honest conflict. The repository is intentionally small and
+uses synthetic data.
 
-The appointment race keeps the scenario understandable. The engineering work
-is the evidence chain: two isolated browser contexts, real keyboard input,
-explicit confirmation and conflict states, fresh-page readback, an admin
-readback, zero test retries, and an inspectable report and trace.
+The guarantee is a unique constraint on `bookings.slot_id`, plus a second
+unique constraint on the idempotency key. Proof is split: a Patrol browser
+journey (visible confirmation, conflict, fresh-page readback, admin readback,
+zero retries) and a separate HTTP/database proof. The browser journey does
+not query PostgreSQL, does not use a test-only API endpoint, and does not
+prove simultaneous arrival. An accessibility switch `?e2e=1` exists for the
+browser test.
 
 ## What the browser journey proves
 
 Patrol drives only visible, accessible product behavior:
 
-1. Two independent browser pages enter different booking intents.
+1. Two independent browser pages enter different booking intents, one after
+   the other.
 2. One page shows the confirmed booking and the other shows the explicit
    conflict through the public Flutter interface.
 3. Two fresh visitor pages read the persisted booked state through the same
@@ -26,13 +31,13 @@ Patrol drives only visible, accessible product behavior:
 The browser journey does not query PostgreSQL or use a test-only endpoint. It
 proves that the behavior a user sees survives the complete application path.
 
-## Why there are two proof layers
+## How the guarantee is verified
 
 | Evidence layer | What it proves | What it deliberately does not claim |
 | --- | --- | --- |
-| Automated browser journey | Visible confirmation, visible conflict, fresh visitor readback, and admin readback through the real UI | Database row counts or simultaneous request arrival |
-| HTTP/database integration proof | Barrier-released competing requests produce `201 + 409`, one durable row, and stable idempotent replay | Browser rendering or accessible interaction |
 | PostgreSQL constraints | At most one booking per slot and one result per idempotency key | That every application layer presents the result honestly |
+| HTTP/database integration proof | Barrier-released competing requests produce `201 + 409`, one durable row, and stable idempotent replay (`201 → 200`). Last full local run: 30 Aug 2026; its artifacts stay under the gitignored `build/` directory and are not in this repository. | Browser rendering, accessible interaction, or simultaneous arrival |
+| Automated browser journey | Visible confirmation, visible conflict, fresh visitor readback, and admin readback through the real UI. Patrol submits one page after the other. | Database row counts or simultaneous request arrival |
 
 Together they form one executable end-to-end argument without asking a UI test
 to inspect implementation details that a user cannot observe.
@@ -58,9 +63,10 @@ To inspect the local report:
 open build/playwright/html/index.html
 ```
 
-CI runs the same command and publishes the successful browser report. The
-[technical one-pager](docs/PORTFOLIO.md) explains the design decisions and the
-[case-study brief](docs/CASE-STUDY.md) defines the exact evidence boundary.
+Public GitHub Actions and GitHub Pages are not part of the evidence. Run the
+command locally. The [technical one-pager](docs/PORTFOLIO.md) explains the
+design decisions and the [case-study brief](docs/CASE-STUDY.md) defines the
+exact evidence boundary.
 
 <details>
 <summary>Run it with a coding agent</summary>
@@ -99,7 +105,8 @@ microservice zoo around a one-rule example.
 - A second unique constraint makes retries with the same idempotency key return
   the original booking instead of executing twice.
 - Documented failures remain honest HTTP outcomes with one stable,
-  machine-readable error envelope and `Retry-After` on temporary outages.
+  machine-readable error envelope and `Retry-After` (HTTP 503) when the booking
+  service or its database is temporarily unavailable.
 - The API is versioned under `/v1`; the checked-in OpenAPI contract documents
   every request, response, and failure.
 - The HTTP/DB proof uses a process barrier to release competing requests, then
@@ -116,11 +123,14 @@ the exact public semantics.
 ## Deliberate boundaries
 
 Last Slot uses synthetic demonstration data. It has no authentication, payment
-flow, Kubernetes deployment, customer claims, uptime claim, or invented
-benchmark. Those omissions keep the repository focused on one complete,
-inspectable browser-to-database evidence path.
+flow, Kubernetes deployment, customer claims, uptime claim, invented
+benchmark, or published CI report. Those omissions keep the repository focused
+on one complete, inspectable browser-to-database evidence path.
 
 
 ## License
 
 MIT.
+
+Part of Daniel Hopp's portfolio: https://daniel.hoppworks.de/ ·
+https://www.linkedin.com/in/hoppworks

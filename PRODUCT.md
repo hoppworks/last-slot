@@ -10,7 +10,7 @@ web
 
 Flutter Web with Riverpod and GoRouter; a Rust Axum gateway calling a tonic
 booking service; PostgreSQL through SQLx; Docker Compose for local orchestration;
-and Patrol Web in GitHub Actions.
+and Patrol Web for the local browser journey.
 
 ## Users
 
@@ -30,7 +30,7 @@ service, and database.
 The project does not claim reliability through a testing-tool badge. It exposes
 one meaningful invariant — one slot can have at most one booking — implements
 that invariant at the database boundary, and proves it through two real browser
-sessions and a visible admin readback.
+pages, driven one after the other, and a visible admin readback.
 
 ## Operating Context
 
@@ -41,7 +41,9 @@ data.
 
 ## Capabilities and Constraints
 
-- Two independent browser sessions can attempt the same booking concurrently.
+- Two independent browser pages can attempt the same booking. The Patrol demo
+  submits one after the other. A separate HTTP/DB proof releases competing
+  requests behind a process barrier. Simultaneous arrival is not claimed.
 - Exactly one booking succeeds; the other receives an honest conflict state.
 - Refreshes and retried requests cannot create duplicate bookings.
 - An admin surface reads the persisted result through the same public API.
@@ -60,10 +62,10 @@ synthetic demonstration data is labeled as such.
 
 ## Evidence on Hand
 
-The confirmed evidence target is the Patrol journey, its trace and report,
-the database constraints, and CI output. There are no customer testimonials,
-performance benchmarks, uptime claims, or commercial deployment claims, and
-future work must not invent them.
+The confirmed evidence target is the local Patrol journey, its trace and
+report, and the database constraints. There is no published CI report, no
+GitHub Pages site, no customer testimonial, no performance benchmark, and no
+uptime or commercial deployment claim, and future work must not invent them.
 
 ## Approved Design Direction
 
@@ -83,5 +85,6 @@ executable Patrol journey rather than by decorative screenshots.
 
 ## Accessibility & Inclusion
 
-The booking and admin surfaces target WCAG 2.2 AA. All critical states have
-semantic labels, keyboard access, visible focus, and text in addition to color.
+The booking and admin surfaces target WCAG 2.2 AA; no external audit has been
+performed. All critical states have semantic labels, keyboard access, visible
+focus, and text in addition to color.

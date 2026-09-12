@@ -1,4 +1,4 @@
-# Last Slot — browser-verified reliability
+# Last Slot — executable reliability case study
 
 ## The testing question
 
@@ -8,7 +8,7 @@ visible to real users, rather than merely green inside unit and API tests?
 Last Slot keeps the product scenario deliberately small: two visitors see the
 same final appointment, but only one booking may survive. That makes the full
 evidence path understandable in minutes while still crossing Flutter, HTTP,
-gRPC, PostgreSQL, and independent browser contexts.
+gRPC, PostgreSQL, and independent browser pages.
 
 ## The invariant
 
@@ -38,8 +38,8 @@ cannot weaken either guarantee.
 
 ## The evidence design
 
-The Patrol Web journey opens two browser pages, uses actual keyboard input,
-visibly verifies one confirmation and one conflict, opens two fresh visitor
+The Patrol Web journey opens two browser pages one after the other, uses actual
+keyboard input, visibly verifies one confirmation and one conflict, opens two fresh visitor
 pages into the persisted booked state, and opens a fresh admin browser. It has
 `retries: 0`, calls no database or test-only endpoint, and retains a trace for
 every run.
@@ -47,14 +47,15 @@ every run.
 A separate HTTP/database proof owns the part a UI test should not fake. It
 releases two real HTTP clients behind a process barrier and verifies one `201`,
 one `409`, and exactly one database row. It also sends one idempotency key twice
-and verifies `201 → 200`, the same booking ID, and one durable row.
+and verifies `201 → 200`, the same booking ID, and one durable row. The barrier
+is best-effort: it does not prove simultaneous arrival.
 
 The two layers meet at the public contract: one establishes the durable
 invariant; the other proves that fresh users can observe the correct result
 through the real interface.
 
-Run it locally with `bash scripts/e2e.sh`. CI runs the same command and publishes
-the report from successful `main` builds.
+Run it locally with `bash scripts/e2e.sh`. Public GitHub Actions and GitHub
+Pages are not part of the evidence.
 
 ## Deliberate trade-off
 
@@ -66,9 +67,9 @@ the trade-off is legibility of the reliability argument over feature breadth.
 ## Negative case
 
 If the unique constraint on `bookings.slot_id` is removed, the service can
-accept both concurrent requests. The browser proof then fails its `1:1`
-success/conflict assertion: two success banners appear and the ledger can no
-longer substantiate the invariant. This is intentionally not a runtime switch
+accept both competing requests. The HTTP/DB proof then fails its `201 + 409`
+and one-row assertions, and the browser proof shows two success banners: the
+ledger can no longer substantiate the invariant. This is intentionally not a runtime switch
 in the public demo; it is a documented failure mode of the durable guard, not a
 feature for users to trigger.
 
@@ -85,8 +86,8 @@ the Patrol report records the browser-visible journey without retries.
 the truth after a cross-layer race. **Task:** make the reliability guarantee
 visible and independently inspectable. **Action:** enforce the rule in
 PostgreSQL, expose stable error semantics, prove barrier-released HTTP requests,
-then drive separate browser contexts through confirmation, conflict, and fresh
-readback. **Result:** one command produces the durable invariant plus a
+then drive two browser pages one after the other through confirmation, conflict,
+and fresh readback. **Result:** one command produces the durable invariant plus a
 zero-retry browser report and trace; no production-scale or uptime claim is
 implied.
 

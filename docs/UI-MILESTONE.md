@@ -14,8 +14,9 @@ The visual constraint in `DESIGN.md` and behavioral constraint in
    journey run against a fresh Docker Compose stack. Together they verify one
    `201`, one `409`, one durable row, visible success/conflict, fresh visitor
    readback, and admin readback.
-5. CI uploads evidence on every run and publishes the successful HTML report
-   from `main` to GitHub Pages.
+5. Every local run retains its evidence (HTML report, trace, HTTP/DB summary,
+   and on failure screenshots, video, and service logs) under `build/`. Public
+   CI and GitHub Pages publication are not part of the delivered evidence.
 
 ## Definition of done
 

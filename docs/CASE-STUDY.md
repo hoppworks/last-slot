@@ -2,18 +2,17 @@
 
 ## The claim
 
-Automated browser testing can make a cross-layer reliability guarantee
-inspectable through the same interface and public API that real users see.
-
-The underlying product invariant remains precise: a single appointment can be
-offered to multiple visitors without being booked twice, even when requests
-compete or a client retries after an uncertain response.
+A single appointment can be offered to multiple visitors without being booked
+twice, even under competing requests or client retries. The evidence is
+executable and split: PostgreSQL enforces the invariant; an HTTP/DB proof and a
+zero-retry browser journey verify it. The browser journey does not prove
+simultaneous arrival.
 
 ## The browser proof
 
-One zero-retry Patrol Web journey opens two browser pages, types through the
-real input path, and visibly verifies one confirmation and one explicit
-conflict. Two fresh visitor pages then load the persisted booked state, and a
+One zero-retry Patrol Web journey opens two browser pages one after the other,
+types through the real input path, and visibly verifies one confirmation and
+one explicit conflict. Two fresh visitor pages then load the persisted booked state, and a
 fresh admin page reads exactly one confirmed booking.
 
 The browser test uses only visible, accessible product behavior. It never
@@ -37,9 +36,10 @@ twice produces `201 → 200`, the same booking ID, and one database row.
 | Patrol Web | Proves those guarantees survive the complete user journey. |
 
 Patrol is the visible evidence layer, not the source of correctness. The
-barrier-synchronised HTTP/DB proof establishes the concurrency and idempotency
-invariants; the browser journey catches broken wiring or dishonest UI states
-above that boundary.
+barrier-synchronised HTTP/DB proof checks that competing requests produce one
+winner and one conflict, plus idempotent replay. It does not prove simultaneous
+arrival. The browser journey catches broken wiring or dishonest UI states above
+that boundary.
 
 ## Acceptance criteria
 
