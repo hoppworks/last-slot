@@ -132,5 +132,5 @@ on one complete, inspectable browser-to-database evidence path.
 
 MIT.
 
-Part of Daniel Hopp's portfolio: https://daniel.hoppworks.de/ ·
+Part of Daniel Hopp's portfolio: https://hoppworks.de/ ·
 https://www.linkedin.com/in/hoppworks
