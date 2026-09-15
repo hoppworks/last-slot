@@ -66,12 +66,17 @@ the trade-off is legibility of the reliability argument over feature breadth.
 
 ## Negative case
 
-If the unique constraint on `bookings.slot_id` is removed, the service can
-accept both competing requests. The HTTP/DB proof then fails its `201 + 409`
-and one-row assertions, and the browser proof shows two success banners: the
-ledger can no longer substantiate the invariant. This is intentionally not a runtime switch
-in the public demo; it is a documented failure mode of the durable guard, not a
-feature for users to trigger.
+Removing the unique constraint on `bookings.slot_id` would allow competing
+requests with distinct idempotency keys to create more than one booking. The
+HTTP/DB proof is designed to detect this through its `201 + 409` and one-row
+assertions. This is a hypothetical failure mode, not a reported mutation-test
+result. The combined runner stops if that proof fails, before the browser
+journey runs.
+
+The ledger displays the booking returned by the public API; it does not
+independently count database rows. The browser journey verifies visible
+outcomes and fresh readback, while the separate HTTP/DB proof verifies
+uniqueness. Removing the constraint is not a public runtime switch.
 
 ## Two-minute browser demo and STAR narrative
 

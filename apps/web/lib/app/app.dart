@@ -764,7 +764,7 @@ class _LedgerCardState extends State<_LedgerCard> {
                 label: 'Audit detail: one persisted booking',
                 child: ExcludeSemantics(
                   child: Text(
-                    'One persisted booking. The public ledger confirms the database invariant.',
+                    'The public ledger reads the persisted booking through the application API. The separate HTTP/database proof verifies uniqueness.',
                     style: const TextStyle(color: _muted),
                   ),
                 ),
